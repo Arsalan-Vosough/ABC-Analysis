@@ -1,0 +1,26 @@
+import numpy as np
+import pandas as pd
+
+def ABC(data,ID,Value,Apercent=0.4):
+    #calculate the Value of each product:
+    GroupedData = data.groupby([ID])[[Value]].sum().reset_index()
+    #sort it based on Value, Descending
+    GroupedDataSorted = GroupedData.sort_values(by = "Amount_Gross_Order" , ascending = False).reset_index(drop = "true")
+    #calculate the percentage of value for each item:
+    GroupedDataSorted["Percentage"] = GroupedDataSorted["Amount_Gross_Order"]/GroupedDataSorted["Amount_Gross_Order"].sum()
+    #cumulative percentage:
+    GroupedDataSorted["Cumulative_Percentage"] = GroupedDataSorted["Percentage"].cumsum()
+    #define the number of each category
+    Acount = (GroupedDataSorted["Cumulative_Percentage"]>= Apercent).idxmax()
+    Bcount = ((GroupedDataSorted["Cumulative_Percentage"]>= 0.8)-Apercent).idxmax()-Acount
+    Ccount =  len(GroupedDataSorted)- Bcount-Acount
+    #create the ABC column :
+    GroupedDataSorted["ABC_Category"] = ["A"]*Acount+["B"]*Bcount+["C"]*Ccount
+    return GroupedDataSorted
+
+#Read your data, you can only change the data path
+data = pd.read_csv("I:/orders.csv")
+#Your data should have at least 3 columns (ProductID, Value of Sales, and Date)
+
+#You should fill the ABC arguments with the names of  the columns of your data
+Item_Categories = ABC(data, "ProductID", "Value", "Date")
